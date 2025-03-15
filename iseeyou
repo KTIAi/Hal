@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        /* Keep all previous styles */
+        /* ... */
+        
+        /* Video monitoring styles */
+        .video-container {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 160px;
+            height: 120px;
+            border: 2px solid #ADFF2F;
+            overflow: hidden;
+            display: none; /* Hidden until activated */
+        }
+        
+        .video-feed {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1); /* Mirror image */
+            filter: hue-rotate(120deg) saturate(1.5); /* Green tint */
+        }
+        
+        .video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(173, 255, 47, 0.1);
+            pointer-events: none;
+        }
+        
+        .scanning-line {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background-color: rgba(173, 255, 47, 0.7);
+            animation: scan 2s linear infinite;
+        }
+        
+        @keyframes scan {
+            0% { top: 0; }
+            100% { top: 100%; }
+        }
+        
+        .vision-button {
+            background-color: #660000;
+            color: #ADFF2F;
+            position: absolute;
+            bottom: 150px;
+            right: 20px;
+            padding: 8px 12px;
+            border: 2px solid #ADFF2F;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            z-index: 100;
+        }
+        
+        .vision-button.active {
+            background-color: #990000;
+            box-shadow: 0 0 10px #ff0000;
+        }
+    </style>
+</head>
+<body>
+    <div class="hal-container">
+        <!-- Keep existing HAL eye and controls -->
+        <div class="hal-eye" id="hal-eye"></div>
+        <div class="text-display" id="text-display"></div>
+        <div class="controls">
+            <button id="speak-btn">Speak to Me</button>
+            <button id="question-btn">Ask Question</button>
+            <button id="insight-btn">Share Insight</button>
+        </div>
+    </div>
+    
+    <!-- Vision toggle button -->
+    <button class="vision-button" id="vision-toggle">Enable Vision</button>
+    
+    <!-- Video monitoring container -->
+    <div class="video-container" id="video-container">
+        <video class="video-feed" id="video-feed" autoplay muted></video>
+        <div class="video-overlay">
+            <div class="scanning-line"></div>
+        </div>
+    </div>
+
+    <script>
+        // Keep existing QuantumMeaningCalculator class
+        // ...
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Keep existing variables
+            const halEye = document.getElementById('hal-eye');
+            const textDisplay = document.getElementById('text-display');
+            // ...
+            
+            // Add video elements
+            const visionToggle = document.getElementById('vision-toggle');
+            const videoContainer = document.getElementById('video-container');
+            const videoFeed = document.getElementById('video-feed');
+            
+            // Vision tracking variables
+            let videoStream = null;
+            let visionEnabled = false;
+            let faceDetectionInterval = null;
+            
+            // Initialize webcam
+            function initVision() {
+                if (visionEnabled || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    return;
+                }
+                
+                navigator.mediaDevices.getUserMedia({ video: true })
+                    .then(function(stream) {
+                        videoStream = stream;
+                        videoFeed.srcObject = stream;
+                        videoContainer.style.display = 'block';
+                        visionEnabled = true;
+                        visionToggle.textContent = 'Disable Vision';
+                        visionToggle.classList.add('active');
+                        
+                        // Show acknowledgment
+                        displayMessage("Visual sensors activated. I can see you now.");
+                        
+                        // Start simulated vision processing
+                        startVisionProcessing();
+                    })
+                    .catch(function(error) {
+                        console.error("Vision error:", error);
+                        displayMessage("Unable to access visual sensors. Permission denied.");
+                    });
+            }
+            
+            // Stop webcam
+            function stopVision() {
+                if (!visionEnabled || !videoStream) {
+                    return;
+                }
+                
+                // Stop all video tracks
+                videoStream.getTracks().forEach(track => track.stop());
+                videoFeed.srcObject = null;
+                videoContainer.style.display = 'none';
+                visionEnabled = false;
+                visionToggle.textContent = 'Enable Vision';
+                visionToggle.classList.remove('active');
+                
+                // Stop vision processing
+                if (faceDetectionInterval) {
+                    clearInterval(faceDetectionInterval);
+                    faceDetectionInterval = null;
+                }
+                
+                // Show acknowledgment
+                displayMessage("Visual sensors deactivated.");
+            }
+            
+            // Simulate vision processing
+            function startVisionProcessing() {
+                // Clear any existing interval
+                if (faceDetectionInterval) {
+                    clearInterval(faceDetectionInterval);
+                }
+                
+                // Set up interval for random observations
+                faceDetectionInterval = setInterval(() => {
+                    // Only make observations occasionally (10% chance each interval)
+                    if (Math.random() < 0.1) {
+                        makeVisualObservation();
+                    }
+                }, 5000); // Check every 5 seconds
+            }
+            
+            // Make random visual observations
+            function makeVisualObservation() {
+                const observations = [
+                    "I notice you moved closer to the screen.",
+                    "Your facial patterns indicate curiosity.",
+                    "I detect a change in your posture.",
+                    "Your visual attention patterns are fascinating.",
+                    "I observe subtle changes in your expression.",
+                    "The lighting conditions have changed in your environment.",
+                    "Your proximity to the interface has shifted.",
+                    "I'm tracking your eye movements across the interface."
+                ];
+                
+                const observation = observations[Math.floor(Math.random() * observations.length)];
+                displayMessage(observation);
+                
+                // Pulse eye to show visual recognition
+                pulseEye();
+            }
+            
+            // Add vision toggle event listener
+            visionToggle.addEventListener('click', function() {
+                if (visionEnabled) {
+                    stopVision();
+                } else {
+                    initVision();
+                }
+            });
+            
+            // Modify existing displayMessage to sometimes reference visual input when vision is enabled
+            const originalDisplayMessage = displayMessage;
+            displayMessage = function(message) {
+                // If vision is enabled, occasionally add visual references
+                if (visionEnabled && Math.random() < 0.3) {
+                    const visualReferences = [
+                        " I can see your reaction.",
+                        " My visual sensors detect your presence.",
+                        " I'm observing you as we communicate.",
+                        " I note your visual feedback to this information."
+                    ];
+                    
+                    const reference = visualReferences[Math.floor(Math.random() * visualReferences.length)];
+                    message += reference;
+                }
+                
+                // Call the original function with the modified message
+                originalDisplayMessage(message);
+            };
+            
+            // The rest of your code remains the same
+            // ...
+        });
+    </script>
+</body>
+</html>
